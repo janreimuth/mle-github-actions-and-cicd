@@ -1,0 +1,44 @@
+name: CML
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+jobs:
+  train-and-report:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: astral-sh/setup-uv@v7
+
+      - uses: iterative/setup-cml@v2.1.0
+
+      - name: Install dependencies
+        run: uv sync --locked
+
+      - name: Download taxi data
+        run: |
+          mkdir -p data
+          curl -L --fail -o data/green_tripdata_2025-01.parquet \
+            https://d37ci6vzurychx.cloudfront.net/trip-data/green_tripdata_2025-01.parquet
+
+      - name: Train model
+        env:
+          MLFLOW_TRACKING_URI: sqlite:///mlflow.db
+        run: |
+          uv run python src/train.py --cml-run
+
+      - name: Publish CML report
+        env:
+          REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cat metrics.txt >> report.md
+          cml comment create report.md

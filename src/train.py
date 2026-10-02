@@ -50,7 +50,7 @@ def train_model(df):
     X = df_processed.drop(columns=[TARGET])
 
     X_train, X_test, y_train, y_test = train_test_split(
-        X, y, random_state=42, test_size=0.2
+        X, y, random_state=73, test_size=0.2
     )
 
     X_train = X_train.to_dict(orient="records")
@@ -68,6 +68,7 @@ def train_model(df):
     metrics = {
         "rmse_train": root_mean_squared_error(y_train, y_pred_train),
         "rmse_test": root_mean_squared_error(y_test, y_pred_test),
+        "rows_before_filtering": len(df),
         "rows_after_filtering": len(df_processed),
     }
     return pipeline, metrics
@@ -114,6 +115,7 @@ def write_cml_metrics(metrics):
                 "",
                 f"- RMSE on the train set: {metrics['rmse_train']:.4f}",
                 f"- RMSE on the test set: {metrics['rmse_test']:.4f}",
+                f"- Rows before filtering: {metrics['rows_before_filtering']}",
                 f"- Rows after filtering: {metrics['rows_after_filtering']}",
                 "",
             ]
